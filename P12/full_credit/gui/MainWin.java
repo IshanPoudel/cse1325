@@ -105,6 +105,7 @@ public class MainWin extends JFrame {
         mView.add(mProduct);
         mView.add(mCustomerView);
         mHelp  .add(mAbout);
+
         
         menubar.add(mFile);
         menubar.add(mCreate);
@@ -259,6 +260,7 @@ public class MainWin extends JFrame {
 
 
         }
+        System.out.println("Hey");
 
 
     }
