@@ -1,0 +1,8 @@
+3
+JADE
+D
+LocalDonut 2.0 0.5 false unfrosted creme
+D
+ABCDonut 5.0 0.5 true glazed creme
+J
+Local 2.0 2.0 blond chocolate vanilla 2
