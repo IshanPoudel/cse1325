@@ -10,6 +10,10 @@ public class Server extends Person {
         super(name, phone);
         this.ssn = ssn;
     }
+    public String ssn()
+    {
+        return ssn;
+    }
     public Server(BufferedReader in) throws IOException {
         super(in);
         this.ssn  = in.readLine();

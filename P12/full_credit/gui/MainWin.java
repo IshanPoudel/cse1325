@@ -237,6 +237,10 @@ public class MainWin extends JFrame {
         bProfitandLoss.setToolTipText("P&L");
         toolbar.add(bProfitandLoss);
         bProfitandLoss.addActionListener(event -> Profit());
+
+        bServerReport = new JButton("Server Report");
+        toolbar.add(bServerReport);
+        bServerReport.addActionListener(event -> ServerReport());
         
         JButton bAbout = new JButton(new ImageIcon("gui/resources/about.png"));
           bAbout.setActionCommand("About JADE Manager");
@@ -542,7 +546,8 @@ public class MainWin extends JFrame {
     {
         double profit =0;
          ArrayList<Order> array_order = store.getOrderArray();
-         String s=  String.format("%20s" ,"NAME") + String.format("%5s" , "PRICE") + String.format("%5s" , "COST")+  String.format("%5s" , "PROFIT")+"\n";
+         String s = "NAME          PRICE  COST  PROFIT\n";
+         // String s=  String.format("%20s" ,"NAME") + String.format("%5s" , "PRICE") + String.format("%5s" , "COST")+  String.format("%5s" , "PROFIT")+"\n";
          for (int i =0; i<array_order.size();i++)
          {
             for(var product: array_order.get(i).products.keySet())
@@ -553,14 +558,43 @@ public class MainWin extends JFrame {
                 s= s+ String.format("%20s" ,product.name()) + String.format("%5.2f" , product.price()) + String.format("%5.2f" , product.cost())+  String.format("%5.2f" , product.price()-product.cost())+"\n";
                 profit = profit + product.price()-product.cost();
                 
+
             }
 
-            s = s + "TOTAL PROFIT " + profit;
+
+
+            
 
          }
 
+         s = s + "TOTAL PROFIT " + profit;
+
          JOptionPane.showMessageDialog(null , s);
 
+
+
+    }
+
+    protected void ServerReport()
+    {
+        ArrayList<Order> array_order = store.getOrderArray();
+        String c = "\n";
+        for (int i=0; i<array_order.size();i++)
+        {
+            Server s = array_order.get(i).getServer();
+            
+            c= c+ String.format("%20s" ,s.name()) + String.format("%20s" , s.phonenumber()) + String.format("%20s" ,s.ssn())+"\n";
+               
+
+
+            
+
+            
+
+
+        }
+
+        JOptionPane.showMessageDialog(null , c);
 
 
     }
@@ -1013,5 +1047,6 @@ public class MainWin extends JFrame {
     private JButton bListPeople;     
     
     private JButton bEditProduct; 
-    private JButton bProfitandLoss;      // Button to list people
+    private JButton bProfitandLoss; 
+    private JButton bServerReport;     // Button to list people
 }

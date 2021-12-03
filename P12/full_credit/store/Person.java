@@ -10,6 +10,7 @@ public class Person {
         this.phone = phone;
     }
     public String name() {return name;}
+    public String phonenumber(){return phone;};
     public Person(BufferedReader in) throws IOException {
         this.name  = in.readLine();
         this.phone  = in.readLine();

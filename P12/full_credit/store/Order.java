@@ -18,6 +18,11 @@ public class Order implements Comparable<Order> {
         this.id = nextID++;
         products = new HashMap<>();
     }
+
+    public Server getServer()
+    {
+        return this.server;
+    }
     public Order(BufferedReader in) throws IOException {
         products = new HashMap<>();
         id = Integer.parseInt(in.readLine());
@@ -45,7 +50,7 @@ public class Order implements Comparable<Order> {
     }
 
     public int getID() {return id;}
-    
+
     public double getPrice(){
         double price=0;
 
