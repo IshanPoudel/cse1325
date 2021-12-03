@@ -222,6 +222,8 @@ public class MainWin extends JFrame {
           toolbar.add(bListProducts);
           bListProducts.addActionListener(event -> updateDisplay(Display.PRODUCTS));
 
+
+
         bListPeople = new JButton(new ImageIcon("gui/resources/list_people.png"));
           bListPeople.setActionCommand("List people");
           bListPeople.setToolTipText("List people");
@@ -229,6 +231,12 @@ public class MainWin extends JFrame {
           bListPeople.addActionListener(event -> updateDisplay(Display.PEOPLE));
 
         toolbar.add(Box.createHorizontalStrut(25));
+
+        bProfitandLoss = new JButton("Profit and Loss");
+        bProfitandLoss.setActionCommand("P&L");
+        bProfitandLoss.setToolTipText("P&L");
+        toolbar.add(bProfitandLoss);
+        bProfitandLoss.addActionListener(event -> Profit());
         
         JButton bAbout = new JButton(new ImageIcon("gui/resources/about.png"));
           bAbout.setActionCommand("About JADE Manager");
@@ -251,7 +259,6 @@ public class MainWin extends JFrame {
         // Provide a status bar for game messages
         msg = new JLabel();
         add(msg, BorderLayout.PAGE_END);
-        
         // Create a default store
         onNewClick();
         
@@ -504,6 +511,58 @@ public class MainWin extends JFrame {
         } catch(Exception e) {
             msg.setText("Failed to create new Java: " + e.getMessage());
         }
+    }
+
+    protected void showPandL()
+    {
+        // System.out.println("You are inside P an L");
+        JLabel ProfitandLoss = new JLabel();
+        String s = "\n";
+        ArrayList<Order> array_order = store.getOrderArray();
+        
+        for (int i =0; i<array_order.size();i++)
+        {
+            
+            // System.out.println(array_order.get(i).toString());
+            System.out.println("PRICE:" + array_order.get(i).getPrice()+'\n');
+            // System.out.println("I AM TRYING TO PRINT");
+            System.out.println("COST:" + array_order.get(i).getCost());
+
+        }
+        ProfitandLoss.setText("<html>" + s.replaceAll("<","&lt;")
+                                 .replaceAll(">", "&gt;")
+                                 .replaceAll("\n", "<br/>")
+                              + "</html>");
+
+        add(data, BorderLayout.CENTER);
+
+    }
+
+    protected void Profit()
+    {
+        double profit =0;
+         ArrayList<Order> array_order = store.getOrderArray();
+         String s=  String.format("%20s" ,"NAME") + String.format("%5s" , "PRICE") + String.format("%5s" , "COST")+  String.format("%5s" , "PROFIT")+"\n";
+         for (int i =0; i<array_order.size();i++)
+         {
+            for(var product: array_order.get(i).products.keySet())
+            {
+                // s=s+( String.format("%20s" , product.name()) ) + String.format("%5.5f" , product.price() 
+                //     + String.format("%5.5f") ,product.cost()) + String.format("%5.5f" , product.price()-product.cost()) +"\n";
+
+                s= s+ String.format("%20s" ,product.name()) + String.format("%5.2f" , product.price()) + String.format("%5.2f" , product.cost())+  String.format("%5.2f" , product.price()-product.cost())+"\n";
+                profit = profit + product.price()-product.cost();
+                
+            }
+
+            s = s + "TOTAL PROFIT " + profit;
+
+         }
+
+         JOptionPane.showMessageDialog(null , s);
+
+
+
     }
     
     protected void onCreateDonutClick() {  // Create a new Java product
@@ -953,5 +1012,6 @@ public class MainWin extends JFrame {
     private JButton bListProducts;          // Button to list products
     private JButton bListPeople;     
     
-    private JButton bEditProduct;       // Button to list people
+    private JButton bEditProduct; 
+    private JButton bProfitandLoss;      // Button to list people
 }

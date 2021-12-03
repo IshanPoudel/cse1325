@@ -124,6 +124,11 @@ public class Store {
     {
         return this.products;
     }
+
+    public ArrayList<Order> getOrderArray()
+    {
+        return this.orders;
+    }
     
     static Product readProduct(BufferedReader in) throws IOException {
         String productType = in.readLine();

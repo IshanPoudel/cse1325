@@ -45,6 +45,31 @@ public class Order implements Comparable<Order> {
     }
 
     public int getID() {return id;}
+    
+    public double getPrice(){
+        double price=0;
+
+         for(var product : products.keySet()) {
+            
+            // System.out.println("The price is" + product.price());
+            price += product.price();
+
+        }
+        return price;
+    }
+
+    public double getCost()
+    {
+        double cost=0;
+        for(var product : products.keySet()) {
+            
+            System.out.println("The price is" + product.price());
+            cost+= product.cost();
+
+        }
+        return cost;
+
+    }
     public void addProduct(int quantity, Product product) {
         if(products.containsKey(product)) quantity += products.get(product);
         products.put(product, quantity);
@@ -72,7 +97,7 @@ public class Order implements Comparable<Order> {
     private int id;
     private Customer customer;
     private Server server;
-    private HashMap<Product, Integer> products;
+    public HashMap<Product, Integer> products;
     
     private static int nextID = 0;
     private static String formatProduct = "%3d  %s\n"; 
