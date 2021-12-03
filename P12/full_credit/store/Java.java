@@ -1,54 +1,80 @@
 package store;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 
-public class Java extends Product
-{
-	protected ArrayList <Shot> shots = new ArrayList<Shot>();
-	protected Darkness darkness;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 
-	public Java(String name , double price , double cost , Darkness darkness)
-	{
-		super(name , price , cost);
-		this.darkness=darkness;
+public class Java extends Product {
+    public static final String ID = "store.Java";
+    public Java(String name, double price, double cost, Darkness darkness) {
+        super(name, price, cost);
+        this.darkness = darkness;
+        this.shots = new ArrayList<>();
+    }
+    public Java(BufferedReader in) throws IOException {
+        super(in);
+        this.darkness  = Darkness.valueOf(in.readLine());
+        this.shots = new ArrayList<>();
+        int size = Integer.parseInt(in.readLine());
+        for(int i=0; i<size; ++i)
+            shots.add(Shot.valueOf(in.readLine()));
+    }
+    @Override
+    public void save(BufferedWriter out) throws IOException {
+        out.write(ID + '\n');
+        super.save(out);
+        out.write("" + darkness  + '\n');
+        out.write("" + shots.size() + '\n');
+        for(Shot s : shots) 
+            out.write("" + s + '\n');
+    }
 
-	}
+    public void addShot(Shot shot) {
+        shots.add(shot);
+        Collections.sort(shots);  // Keep sorted for equals()
+    }
+    @Override
+    public String toString() {
+        String result = "JAVA: " + name + " (" + darkness + " with ";
+        if (shots.size() == 0) result += "no shots";
+        else {
+            String separator = "";
+            for(Shot s : shots) {
+                result += separator + s; 
+                separator = ", ";
+            }
+        }
+        result += ") $" + price;
+        return result;
+    }
 
-	public void addShot(Shot shot){
-		this.shots.add(shot);
-	}
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if(o == null) return false; 
+        if(this.getClass() != o.getClass()) return false;
+        Java j = (Java) o;
+        if(!super.equals((Product) j)) return false;
+        if(darkness != j.darkness) return false;
+        if(shots.size() != j.shots.size()) return false;
+        // IMPORTANT: This loop works only if shots is kept sorted!
+        for(int i=0; i<shots.size(); ++i)
+            if(shots.get(i) != j.shots.get(i)) return false;
+        return true;
+    }
 
-	public String toString(){
-		return (this.name + " with the following shots " + this.shots + " $" + this.price );
-	}
+    @Override
+    public int hashCode() {
+        int hash = super.hashCode();
+        hash = 31*hash + (darkness == null ? 0 : darkness.hashCode());
+        for(Shot shot : shots)
+            hash = 31*hash + shot.hashCode();
+        return hash;
+    }
 
-	@Override
-	public String getAttributes()
-	{
-		String s = new String(
-			"J\n"+this.name+" "+this.price+" "+
-			this.cost+" " + this.darkness+" ");
-
-		
-
-		for (Shot shot : this.shots)
-		{
-			s = s + shot + " ";
-		}
-
-		s = s + this.shots.size();
-
-		
-
-		return s;
-	}
-
-	public static void main(String[] args)
-	{
-		Java cof = new Java("Local" , 2.00 , 2.00 , Darkness.blond);
-		cof.addShot(Shot.chocolate);
-		cof.addShot(Shot.vanilla);
-		System.out.println(cof);
-		System.out.println(cof.getAttributes());
-	}
+    Darkness darkness;
+    ArrayList<Shot> shots;
 }

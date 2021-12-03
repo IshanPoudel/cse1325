@@ -1,7 +1,11 @@
 package store;
 
-public enum Frosting
- 	{
-
-	unfrosted , glazed , chocolate , vanilla , strawberry , creme , cherry
-    }
+public enum Frosting {
+    Unfrosted,
+    Glazed,
+    Chocolate,
+    Vanilla,
+    Strawberry,
+    Creme,
+    Cherry,
+}

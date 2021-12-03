@@ -1,43 +1,28 @@
 package store;
 
-public abstract class Person
-{
-	protected  String name;
-	protected  String phoneNumber;
-	
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 
+public class Person {
+    public Person(String name, String phone) {
+        this.name  = name;
+        this.phone = phone;
+    }
+    public String name() {return name;}
+    public Person(BufferedReader in) throws IOException {
+        this.name  = in.readLine();
+        this.phone  = in.readLine();
+    }
+    public void save(BufferedWriter out) throws IOException {
+        out.write("" + name  + '\n');
+        out.write("" + phone  + '\n');
+    }
+    @Override
+    public String toString() {
+        return "Person " + name + " (" + phone + ")";
+    }
 
-	public Person(String name , String phoneNumber)
-	{
-		this.name = name;
-		this.phoneNumber = phoneNumber;
-		
-	}
-
-	public String getName()
-	{
-		return this.name;
-	}
-
-	public String getPhoneNumber()
-	{
-		return this.phoneNumber;
-	}
-
-	
-
-	@Override
-	public String toString()
-	{
-		return this.name;
-	}
-
-	
-	String getAttributes()
-	{
-		return this.name;
-	}
-
-
-
+    protected String name;
+    protected String phone;
 }

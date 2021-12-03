@@ -1,5 +1,8 @@
 package store;
 
-public enum Filling{
-	unfilled , creme , bavarian , strawberry
-    }
+public enum Filling {
+    Unfilled,
+    Creme,
+    Bavarian,
+    Strawberry,
+}

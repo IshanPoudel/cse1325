@@ -7,21 +7,31 @@ import javax.swing.JMenuItem;
 
 import javax.swing.JToolBar;
 import javax.swing.JButton;
-import javax.swing.JTextField;
 
 import javax.swing.JDialog;
+import javax.swing.JPanel;
 import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JTextField;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.JScrollPane;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import java.awt.image.BufferedImage;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.io.File;
 import java.io.BufferedReader;
@@ -30,34 +40,40 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import java.util.ArrayList;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import store.Store;
+import store.Order;
 import store.Product;
 import store.Donut;
-import store.Customer;
 import store.Frosting;
 import store.Filling;
 import store.Java;
 import store.Darkness;
 import store.Shot;
-
-import java.awt.*;
+import store.Person;
+import store.Customer;
+import store.Server;
 
 public class MainWin extends JFrame {
+    private final String NAME = "JADE";
+    private final String EXT = "jade";
+    private final String VERSION = "0.5";
+    private final String FILE_VERSION = "1.2";
+    private final String MAGIC_COOKIE = "ʝąɗ玉";
 
-    // ///////////////////////////////////////////////////////////////////
-    // Constructors
-
+    private final int WIDTH = 800;
+    private final int HEIGHT = 600;
+    
+    protected enum Display {PRODUCTS, PEOPLE, ORDERS};
+    
     public MainWin(String title) {
         super(title);
-        store = new Store("JADE");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 200);
-        filename = new File("untitled.jade");
+        setSize(WIDTH, HEIGHT);
         
         // /////// ////////////////////////////////////////////////////////////////
         // M E N U
@@ -65,47 +81,53 @@ public class MainWin extends JFrame {
 
         JMenuBar menubar = new JMenuBar();
         
-        JMenu     mFile    = new JMenu("File");
-        JMenuItem mQuit    = new JMenuItem("Quit");
-        JMenuItem mNew = new JMenuItem("New");
-        JMenuItem mOpen = new JMenuItem("Open");
-        JMenuItem mSave = new JMenuItem("Save");
-        JMenuItem mSaveAs = new JMenuItem("Save as");
-        JMenu     mCreate  = new JMenu("Create");
-        JMenuItem mJava    = new JMenuItem("Java");
-        JMenuItem mDonut   = new JMenuItem("Donut");
+        JMenu     mFile     = new JMenu("File");
+        JMenuItem mNew      = new JMenuItem("New");
+        JMenuItem mOpen     = new JMenuItem("Open");
+        JMenuItem mSave     = new JMenuItem("Save");
+        JMenuItem mSaveAs   = new JMenuItem("Save As");
+        JMenuItem mQuit     = new JMenuItem("Quit");
+        JMenu     mCreate   = new JMenu("Create");
+        JMenuItem mOrder    = new JMenuItem("Order");
+        JMenuItem mJava     = new JMenuItem("Java");
+        JMenuItem mDonut    = new JMenuItem("Donut");
         JMenuItem mCustomer = new JMenuItem("Customer");
-        JMenuItem mServer = new JMenuItem("Server");
-        JMenu     mView = new JMenu("View");
-        JMenuItem mProduct = new JMenuItem("Products");
-        JMenuItem mCustomerView = new JMenuItem("Customer");
-        JMenu     mHelp    = new JMenu("Help");
-        JMenuItem mAbout   = new JMenuItem("About");
-
+        JMenuItem mServer   = new JMenuItem("Server");
+        JMenu     mView     = new JMenu("View");
+        JMenuItem mOrders   = new JMenuItem("Orders");
+        JMenuItem mProducts = new JMenuItem("Products");
+        JMenuItem mPeople   = new JMenuItem("People");
+        JMenu     mHelp     = new JMenu("Help");
+        JMenuItem mAbout    = new JMenuItem("About");
         
-        mQuit .addActionListener(event -> onQuitClick());
-        mJava .addActionListener(event -> onCreateJavaClick());
-        mDonut.addActionListener(event -> onCreateDonutClick());
+        mNew     .addActionListener(event -> onNewClick());
+        mOpen    .addActionListener(event -> onOpenClick());
+        mSave    .addActionListener(event -> onSaveClick());
+        mSaveAs  .addActionListener(event -> onSaveAsClick());
+        mQuit    .addActionListener(event -> onQuitClick());
+        mOrder   .addActionListener(event -> onCreateOrderClick());
+        mJava    .addActionListener(event -> onCreateJavaClick());
+        mDonut   .addActionListener(event -> onCreateDonutClick());
         mCustomer.addActionListener(event -> onCreateCustomerClick());
-        mProduct.addActionListener(event -> onViewProductClick());
-        mServer.addActionListener(event -> onCreateServerClick());
-        mCustomerView.addActionListener( event -> onViewCustomerClick());
-        mAbout.addActionListener(event -> onAboutClick());
+        mServer  .addActionListener(event -> onCreateServerClick());
+        mProducts.addActionListener(event -> updateDisplay(Display.PRODUCTS));
+        mPeople  .addActionListener(event -> updateDisplay(Display.PEOPLE));
+        mOrders  .addActionListener(event -> updateDisplay(Display.ORDERS));
+        mAbout   .addActionListener(event -> onAboutClick());
 
         
-        mFile.add(mQuit);
-        mFile.add(mNew);
-        mFile.add(mOpen);
-        mFile.add(mSave);
-        mFile.add(mSaveAs);
+        mFile  .add(mNew);
+        mFile  .add(mOpen);
+        mFile  .add(mSave);
+        mFile  .add(mSaveAs);
+        mFile  .add(mQuit);
         mCreate.add(mJava);
         mCreate.add(mDonut);
         mCreate.add(mCustomer);
         mCreate.add(mServer);
-        mView.add(mProduct);
-        mView.add(mCustomerView);
+        mView  .add(mProducts);
+        mView  .add(mPeople);
         mHelp  .add(mAbout);
-
         
         menubar.add(mFile);
         menubar.add(mCreate);
@@ -119,34 +141,38 @@ public class MainWin extends JFrame {
         // Add a toolbar to the PAGE_START region below the menu
         JToolBar toolbar = new JToolBar("JADE Controls");
 
-        // Create the 3 buttons using the icons provided
+       JButton bNew = new JButton(new ImageIcon("gui/resources/file_new.png"));
+          bNew.setActionCommand("Create new JADE store");
+          bNew.setToolTipText("Create new JADE store");
+          toolbar.add(bNew);
+          bNew.addActionListener(event -> onNewClick());
 
+        JButton bOpen = new JButton(new ImageIcon("gui/resources/file_open.png"));
+          bOpen.setActionCommand("Open JADE file");
+          bOpen.setToolTipText("Open JADE file");
+          toolbar.add(bOpen);
+          bOpen.addActionListener(event -> onOpenClick());
+
+        JButton bSave = new JButton(new ImageIcon("gui/resources/file_save.png"));
+          bSave.setActionCommand("Save JADE file");
+          bSave.setToolTipText("Save JADE file");
+          toolbar.add(bSave);
+          bSave.addActionListener(event -> onSaveClick());
+
+        JButton bSaveAs = new JButton(new ImageIcon("gui/resources/file_save_as.png"));
+          bSaveAs.setActionCommand("Save JADE as new file");
+          bSaveAs.setToolTipText("Save JADE as new file");
+          toolbar.add(bSaveAs);
+          bSaveAs.addActionListener(event -> onSaveAsClick());
+
+        toolbar.add(Box.createHorizontalStrut(25));
         
-        JButton bNew = new JButton("New File");
-       
-         bNew.setActionCommand("Create new file");
-         bNew.setToolTipText("Create a new file ");
-         toolbar.add(bNew);
-         bNew.addActionListener(event -> onCreateNewFile());
-
-        JButton bOpen = new JButton("Open File");
-        bOpen.setActionCommand("Open file");
-        bOpen.setToolTipText("Open file");
-        toolbar.add(bOpen);
-        bOpen.addActionListener(event -> onOpenFile());
-
-        JButton bSave = new JButton("Save File");
-        bSave.setActionCommand("Save File");
-        bSave.setToolTipText("Save File");
-        toolbar.add(bSave);
-        bSave.addActionListener(event -> onSave());
-
-        JButton bSaveAs = new JButton("Save File As");
-        bSaveAs.setActionCommand("Save File As");
-        bSaveAs.setToolTipText("Save File As");
-        toolbar.add(bSaveAs);
-        bSaveAs.addActionListener(event ->onSaveAs()); 
-
+        // Create the buttons using the icons provided
+        bOrder  = new JButton(new ImageIcon("gui/resources/new_order.png"));
+          bOrder.setActionCommand("Create new Order");
+          bOrder.setToolTipText("Place an Order");
+          toolbar.add(bOrder);
+          bOrder.addActionListener(event -> onCreateOrderClick());
 
         bJava  = new JButton(new ImageIcon("gui/resources/new_java.png"));
           bJava.setActionCommand("Create new Java");
@@ -160,49 +186,60 @@ public class MainWin extends JFrame {
           toolbar.add(bDonut);
           bDonut.addActionListener(event -> onCreateDonutClick());
 
-        bCustomer = new JButton("Create Customer");
-        bCustomer.setActionCommand("Create new customer");
-        bCustomer.setToolTipText("Create new customer");
-        toolbar.add(bCustomer);
-        bCustomer.addActionListener(event -> onCreateCustomerClick());
+        bCustomer = new JButton(new ImageIcon("gui/resources/new_customer.png"));
+          bCustomer.setActionCommand("Create new customer");
+          bCustomer.setToolTipText("Create a new customer");
+          toolbar.add(bCustomer);
+          bCustomer.addActionListener(event -> onCreateCustomerClick());
 
-        bServer = new JButton("Create Server");
-        bServer.setActionCommand("Create new server");
-        bServer.setToolTipText("Create a new server");
-        toolbar.add(bServer);
-        bServer.addActionListener(event -> onCreateServerClick());
+        bServer = new JButton(new ImageIcon("gui/resources/new_server.png"));
+          bServer.setActionCommand("Create new server");
+          bServer.setToolTipText("Create a new server");
+          toolbar.add(bServer);
+          bServer.addActionListener(event -> onCreateServerClick());
 
-
-
-        bViewProduct = new JButton("View Products");
-        bViewProduct.setActionCommand("View Products");
-        bViewProduct.setToolTipText("View Products");
-        toolbar.add(bViewProduct);
-        bViewProduct.addActionListener(event -> onViewProductClick());
-
-        bViewCustomer = new JButton("View Customer");
-        bViewCustomer.setActionCommand("View Customer");
-        bViewCustomer.setToolTipText("View Customers");
-        toolbar.add(bViewCustomer);
-        bViewCustomer.addActionListener(event -> onViewCustomerClick());
-
-        bViewServer = new JButton("Voew Servers");
-        bViewServer.setActionCommand("View Servers");
-        bViewServer.setToolTipText("View Servers");
-        toolbar.add(bViewServer);
-        bViewServer.addActionListener(event -> onViewServerClick());
+        toolbar.add(Box.createHorizontalStrut(25));
 
 
+        bEditJava = new JButton("Edit Java");
+        bEditJava.setActionCommand("Edit Java Product");
+        bEditJava.setToolTipText("Create a New Java Product");
+        toolbar.add(bEditJava);
+        bEditJava.addActionListener(event -> onEditJavaClick());
 
 
+        bEditDonut = new JButton("Edit Donut");
+        bEditDonut.setActionCommand("Edit Donut Product");
+        bEditDonut.setToolTipText("Edit  a New Donut Product");
+        toolbar.add(bEditDonut);
+        bEditJava.addActionListener(event -> onEditDonutClick());
+        
+        bListOrders = new JButton(new ImageIcon("gui/resources/list_orders.png"));
+          bListOrders.setActionCommand("List all orders");
+          bListOrders.setToolTipText("List all orders");
+          toolbar.add(bListOrders);
+          bListOrders.addActionListener(event -> updateDisplay(Display.ORDERS));
 
+        bListProducts = new JButton(new ImageIcon("gui/resources/list_products.png"));
+          bListProducts.setActionCommand("List all products");
+          bListProducts.setToolTipText("List all products");
+          toolbar.add(bListProducts);
+          bListProducts.addActionListener(event -> updateDisplay(Display.PRODUCTS));
+
+        bListPeople = new JButton(new ImageIcon("gui/resources/list_people.png"));
+          bListPeople.setActionCommand("List people");
+          bListPeople.setToolTipText("List people");
+          toolbar.add(bListPeople);
+          bListPeople.addActionListener(event -> updateDisplay(Display.PEOPLE));
+
+        toolbar.add(Box.createHorizontalStrut(25));
+        
         JButton bAbout = new JButton(new ImageIcon("gui/resources/about.png"));
           bAbout.setActionCommand("About JADE Manager");
           bAbout.setToolTipText("About JADE Manager");
           toolbar.add(bAbout);
           bAbout.addActionListener(event -> onAboutClick());
 
-         
         getContentPane().add(toolbar, BorderLayout.PAGE_START);
         
         
@@ -211,6 +248,7 @@ public class MainWin extends JFrame {
         // Provide a text entry box to show output
         data = new JLabel();
         data.setFont(new Font("SansSerif", Font.BOLD, 12));
+        data.setVerticalAlignment(JLabel.TOP);
         add(data, BorderLayout.CENTER);
 
         // S T A T U S   B A R   D I S P L A Y ////////////////////////////////////
@@ -218,293 +256,536 @@ public class MainWin extends JFrame {
         msg = new JLabel();
         add(msg, BorderLayout.PAGE_END);
         
-        // Initialize the dislay
-        updateDisplay();
+        // Create a default store
+        onNewClick();
         
         // Make everything in the JFrame visible
-        setVisible(true);
+        setVisible(true);        
     }
-
-    protected void onCreateNewFile()
-    {
-    	// System.out.println("I was called");
-    	store = new Store();
-    	updateDisplay();
-
-    }
-
-    protected void onOpenFile()
-    {
-    	final JFileChooser fc = new JFileChooser(filename);
-    	FileFilter jadeFiles = new FileNameExtensionFilter("Jade files", "jade");
-        fc.addChoosableFileFilter(jadeFiles);         
-        fc.setFileFilter(jadeFiles);  
-
-        int result = fc.showOpenDialog(this); 
-
-        if (result == JFileChooser.APPROVE_OPTION)
-        {
-        	filename = fc.getSelectedFile();
-
-        	try
-        	{
-
-        		BufferedReader br = new BufferedReader(new FileReader(filename));
-        		store = new Store(br);
-        	    updateDisplay();
-        	} catch (Exception e)
-        	{
-        		return;
-        	}
-
-
-
+    
+    // Listeners
+    
+    protected void onNewClick() {
+        String storeName = "JADE";
+        if(store != null) {
+            storeName = JOptionPane.showInputDialog(this, "New store name?");
         }
-        System.out.println("Hey");
-
-
+        if(storeName != null) {
+            store = new Store(storeName);
+            filename = new File("Untitled.jade");
+        }
+        updateDisplay(Display.PRODUCTS);
     }
 
-    protected void onSaveAs()
-    {
-    	final JFileChooser fc = new JFileChooser(filename);
-    	FileFilter storeFiles = new FileNameExtensionFilter("jade" , "jade");
-    	fc.addChoosableFileFilter(storeFiles);
-    	fc.setFileFilter(storeFiles);
-
-    	int result = fc.showSaveDialog(this);
-    	if(result == JFileChooser.APPROVE_OPTION)
-    	{
-    		filename = fc.getSelectedFile();
-
-    		if(!filename.getAbsolutePath().endsWith(".jade"))
-    		{
-    			filename = new File(filename.getAbsolutePath() + ".jade");
-    			onSave();
-    		}
-    	}
+    protected void onOpenClick() {
+        final JFileChooser fc = new JFileChooser(filename);
+        FileFilter jadeFiles = new FileNameExtensionFilter(NAME + " files", EXT);
+        fc.addChoosableFileFilter(jadeFiles);
+        fc.setFileFilter(jadeFiles);
+        
+        int result = fc.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File fname = fc.getSelectedFile();
+             
+            try (BufferedReader br = new BufferedReader(new FileReader(fname))) {
+                String magicCookie = br.readLine();
+                if(!magicCookie.equals(MAGIC_COOKIE)) 
+                    throw new RuntimeException("Not a " + NAME + " file");
+                String fileVersion = br.readLine();
+                if(!fileVersion.equals(FILE_VERSION)) 
+                    throw new RuntimeException(
+                        "Incompatible " + NAME + " file format: " + fileVersion);
+                
+                // Try to read the new store
+                // If it fails, old store remains
+                // If it succeeds, replace old store with new store
+                
+                Store newStore = new Store(br);
+                store = newStore;
+                filename = fname;
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(
+                    this, 
+                    "Unable to open " + filename + '\n' + e, "Failed",
+                    JOptionPane.ERROR_MESSAGE); 
+            }
+            updateDisplay(Display.PRODUCTS);
+        }
+    }
+    protected void onSaveClick() {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
+            bw.write(MAGIC_COOKIE + '\n');
+            bw.write(FILE_VERSION + '\n');
+            store.save(bw);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                this, 
+                "Unable to save " + filename + '\n' + e, "Failed",
+                JOptionPane.ERROR_MESSAGE); 
+        }
     }
 
-    protected void onSave()
-    {
-    	try
-    	{
-    		// System.out.println("The file name to save is " + filename);
-    		BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
-    		store.savefile(bw);
-
-    	} catch (Exception e)
-    	{
-    		JOptionPane.showMessageDialog(this , "Unable to open" + filename + '\n' + e , "Failed" , JOptionPane.ERROR_MESSAGE);
-    	}
-    	// try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-    	// 	store.savefile(bw);
-    	// }
-    	
+    protected void onSaveAsClick() {
+        final JFileChooser fc = new JFileChooser(filename);
+        FileFilter jadeFiles = new FileNameExtensionFilter(NAME + " files", EXT);
+        fc.addChoosableFileFilter(jadeFiles);
+        fc.setFileFilter(jadeFiles);
+        
+        int result = fc.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File fname = fc.getSelectedFile();
+            if(!fname.getAbsolutePath().endsWith("." + EXT))
+                fname = new File(fname.getAbsolutePath() + "." + EXT);
+            filename = fname; // Success - use new filename!
+            onSaveClick();
+        }
     }
 
-    protected void onCreateServerClick()
-    {
-        JLabel name = new JLabel("<HTML><br/>Name</HTML>");
-        JTextField serverName = new JTextField(20);
-
-        JLabel number = new JLabel("<HTML><br/>Phone Number</HTML>");
-        JTextField serverNumber = new JTextField(20);
-
-        JLabel ssn = new JLabel("<HTML><br/>SSN</HTML>");
-        JTextField ssnValue = new JTextField(20);
-
-        Object[] objects = {
-            name , serverName , 
-            number , serverNumber ,
-            ssn , ssnValue
-        };
-
-        int button = JOptionPane.showConfirmDialog(
-            this , 
-            objects , 
-            "New Server" , 
-            JOptionPane.OK_CANCEL_OPTION , 
-            JOptionPane.QUESTION_MESSAGE  );
-
-        //SEND VALUES TO CONSTRUCTOR
-
-
-
+    protected void onQuitClick() {
+        dispose();
     }
-
-
-    protected void onCreateJavaClick()
-    {
-
-        JLabel name = new JLabel("<HTML><br/>Name</HTML>");
-        JTextField javaName = new JTextField(20);
-
-        JLabel price = new JLabel("<HTML><br/>Price</HTML>");
-        JTextField javaPrice = new JTextField(20);
-
-        JLabel cost = new JLabel("<HTML><br/>Cost</HTML>");
-        JTextField javaCost = new JTextField(20);
-
-        JLabel darknessLabel = new JLabel("<HTML><br/>Darkness</HTML>");
-        //Get the filling in a JComboBox
-        JComboBox<Darkness> darknessOption = new JComboBox<Darkness>(Darkness.values());
-
-        Object[] objects = {
-            name , javaName , 
-            price , javaPrice,
-            cost , javaCost ,
-            darknessLabel , darknessOption 
-            
-
-        };
-
-        int button = JOptionPane.showConfirmDialog(
-            this ,
-            objects , 
-            "New Java" , 
-            JOptionPane.OK_CANCEL_OPTION , 
-            JOptionPane.QUESTION_MESSAGE  );
-
-        //send values to constructor
-
-        double javaPricedouble = Double.parseDouble(javaPrice.getText());
-        double javaCostdouble = Double.parseDouble(javaCost.getText());
-
-        Java java = new Java (javaName.getText() , javaPricedouble , javaCostdouble , 
-            (Darkness) darknessOption.getSelectedItem());
-
-        try
-        {
-            while(true) {
-                Shot shot = (Shot) selectFromArray("Shot?", Shot.values());
-                if(shot.equals(Shot.None)) break;
-                java.addShot(shot);
+    
+    protected void onCreateOrderClick() {  // Place an order
+        try {
+            ArrayList<Customer> customers = new ArrayList<>();
+            ArrayList<Server>   servers = new ArrayList<>();
+        
+            for(Object p : store.getPeople()) {
+                if(p instanceof Customer) customers.add((Customer) p);
+                if(p instanceof Server)   servers.add((Server) p);
             }
 
-        }catch (CancelDialogException e) { // ignore a Cancel
-        }catch(Exception e) {
+            // Customer
+            JLabel lCustomer = new JLabel("<HTML>Customer</HTML>");
+            JComboBox<Object> dCustomer = new JComboBox<>(customers.toArray());
+   
+            // Server
+            JLabel lServer = new JLabel("<HTML><BR/>Server</HTML>");
+            JComboBox<Object> dServer = new JComboBox<>(servers.toArray());
+        
+            Object[] objects = {
+                lCustomer, dCustomer,
+                lServer, dServer
+            };
+        
+            int button = JOptionPane.showConfirmDialog(
+                this,
+                objects,
+                "Begin Order",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+
+            if(button != JOptionPane.OK_OPTION) return;
+
+            // Create the Order object
+            Order newOrder = new Order((Customer) dCustomer.getSelectedItem(), 
+                                       (Server)   dServer  .getSelectedItem());
+       
+            // Quantity and Product
+            JLabel lProducts = new JLabel("<HTML>" 
+                                        + newOrder.toString() 
+                         + "<BR/><BR/><BR/><BR/><BR/><BR/><BR/><BR/></HTML>");
+        
+            JSpinner sQuantity = new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
+            JComboBox<Object> dProducts = new JComboBox<>(store.getProducts());
+            JButton bAdd = new JButton("Add");
+            bAdd.addActionListener(event -> {
+                newOrder.addProduct((Integer) sQuantity.getValue(), 
+                                    (Product) dProducts.getSelectedItem());
+                lProducts.setText("<HTML>" + newOrder.toString() 
+                                                     .replaceAll("<",  "&lt;")
+                                                     .replaceAll(">",  "&gt;")
+                                                     .replaceAll("\n", "<br/>")
+                               + "</HTML>");
+            });
+        
+            JPanel productPanel = new JPanel(); // Default FlowLayout is fine here
+            productPanel.add(bAdd);
+            productPanel.add(sQuantity);
+            productPanel.add(dProducts);
+
+            // Add components to a dialog
+
+            Object[] orderObjects = {
+                lProducts,
+                productPanel,
+            };
+            
+            int selection = JOptionPane.showConfirmDialog(
+                this,
+                orderObjects,
+                "Add Products to Order",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if(selection != JOptionPane.OK_OPTION) return;
+
+            store.addOrder(newOrder);
+            updateDisplay(Display.ORDERS);
+        } catch(Exception e) {
+            msg.setText("Failed to create new Order: " + e.getMessage());
+        }
+    }
+
+    protected void onCreateJavaClick() {  // Create a new Java product
+        try {
+            // Name of Java
+            JLabel lName = new JLabel("Name");
+            JTextField dName = new JTextField(20);
+
+            // Price
+            JLabel lPrice = new JLabel("<HTML><BR/>Price</HTML>");
+            JSpinner dPrice = new JSpinner(new SpinnerNumberModel(3.95, 0.0, 99.99, 0.05));
+
+            // Cost
+            JLabel lCost = new JLabel("<HTML><BR/>Cost</HTML>");
+            JSpinner dCost = new JSpinner(new SpinnerNumberModel(0.95, 0.0, 99.99, 0.05));
+
+            // Darkness
+            JLabel lDarkness = new JLabel("<HTML><BR/>Darkness</HTML>");
+            JComboBox<Object> dDarkness = new JComboBox<>(Darkness.values());
+            
+            // Provide spacing to the Shots area
+            JLabel sShots = new JLabel("<HTML><BR/></HTML>");
+            
+            // Shots
+            JPanel shotPanel = new JPanel();
+            shotPanel.setLayout(new BoxLayout(shotPanel, BoxLayout.PAGE_AXIS));
+            
+            // This provides a scroll bar when a lot of shots are added
+            JScrollPane scrollingShotPanel = new JScrollPane(shotPanel);
+            scrollingShotPanel.setPreferredSize(new Dimension(200,120));
+            
+            // Prepopulate with 3 shot comboboxes
+            shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            
+            // This button adds another combobox each time it's pressed
+            JButton addShot = new JButton("Add a Shot");
+            addShot.addActionListener(event -> {
+                shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            });
+            
+            // Add components to a dialog
+
+            Object[] objects = {
+                lName,     dName,
+                lPrice,    dPrice,
+                lCost,     dCost,
+                lDarkness, dDarkness,
+                sShots,    
+                addShot,    scrollingShotPanel,
+            };
+            
+            int button = JOptionPane.showConfirmDialog(
+                this,
+                objects,
+                "New Java",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if(button != JOptionPane.OK_OPTION) return;
+
+            String name = dName.getText();
+            double price = (double) dPrice.getValue();
+            double cost = (double) dCost.getValue();
+            Darkness darkness = (Darkness) dDarkness.getSelectedItem();
+            Java java = new Java(name, price, cost, darkness);
+            
+            for(Object o : shotPanel.getComponents()) {
+                if(!(o instanceof JComboBox)) continue; // verify cast will work, then
+                @SuppressWarnings("unchecked")          // skip unchecked cast warning
+                    JComboBox<Object> cb = (JComboBox<Object>) o;
+                Shot shot = (Shot) cb.getSelectedItem();
+                if(shot != Shot.None) java.addShot(shot);
+            }
+            store.addProduct(java);
+            updateDisplay(Display.PRODUCTS);
+        } catch(Exception e) {
             msg.setText("Failed to create new Java: " + e.getMessage());
         }
-        
-        store.addProduct(java);
-        updateDisplay();
-
-
-        
-
-
-
     }
-
-    protected void onViewCustomerClick()
-    {
-        updateDisplayCustomer();
-    }
-
-    protected void onViewProductClick()
-    {
-        updateDisplay();
-
-    }
-
-    protected void onViewServerClick()
-    {
-        updateDisplayServer();
-    }
-
+    
     protected void onCreateDonutClick() {  // Create a new Java product
-        JLabel name = new JLabel("<HTML><br/>Name</HTML>");
-        JTextField donutName = new JTextField(20);
+        try {
+            // Name of Donut
+            JLabel lName = new JLabel("Name");
+            JTextField dName = new JTextField(20);
 
-        JLabel price = new JLabel("<HTML><br/>Price</HTML>");
-        JTextField donutPrice = new JTextField(20);
+            // Price
+            JLabel lPrice = new JLabel("<HTML><BR/>Price</HTML>");
+            JSpinner dPrice = new JSpinner(new SpinnerNumberModel(1.95, 0.0, 99.99, 0.05));
 
-        JLabel cost = new JLabel("<HTML><br/>Cost</HTML>");
-        JTextField donutCost = new JTextField(20);
+            // Cost
+            JLabel lCost = new JLabel("<HTML><BR/>Cost</HTML>");
+            JSpinner dCost = new JSpinner(new SpinnerNumberModel(0.55, 0.0, 99.99, 0.05));
 
-        JLabel fillingLabel = new JLabel("<HTML><br/>Filling</HTML>");
-        //Get the filling in a JComboBox
-        JComboBox<Filling> fillingOption = new JComboBox<Filling>(Filling.values());
+            // Frosting
+            JLabel lFrosting = new JLabel("<HTML><BR/>Frosting</HTML>");
+            JComboBox<Object> dFrosting = new JComboBox<>(Frosting.values());
 
-        JLabel frostingLabel = new JLabel("<HTML><br/>Frosting</HTML>");
-        //Get the frosting
-        JComboBox<Frosting> frostingOption = new JComboBox<Frosting>(Frosting.values());
+            // Filling
+            JLabel lFilling = new JLabel("<HTML><BR/>Filling</HTML>");
+            JComboBox<Object> dFilling = new JComboBox<>(Filling.values());
 
-        //boolean sprinkles
-        JLabel sprinkleLabel = new JLabel("<HTML><br/>Sprinkles</HTML>");
-        String[] sprinkles = {"Sprinkles"  , "No Sprinkles"};
-        JComboBox<String> sprinkleOption = new JComboBox<String>(sprinkles) ;
-        //Display the options
+            // Sprinkles
+            String[] options = {"No Sprinkles", "Sprinkles"};
+            JLabel lSprinkles = new JLabel("<HTML><BR/>Sprinkles</HTML>");
+            JComboBox<Object> dSprinkles = new JComboBox<>(options);
+
+            Object[] objects = {
+                lName,      dName,
+                lPrice,     dPrice,
+                lCost,      dCost,
+                lFrosting,  dFrosting,
+                lFilling,   dFilling,
+                lSprinkles, dSprinkles,
+            };
+            
+            int button = JOptionPane.showConfirmDialog(
+                this,
+                objects,
+                "New Donut",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if(button == JOptionPane.OK_OPTION) {
+                String name = dName.getText();
+                double price = (double) dPrice.getValue();
+                double cost = (double) dCost.getValue();
+                Frosting frosting = (Frosting) dFrosting.getSelectedItem();
+                Filling filling = (Filling) dFilling.getSelectedItem();
+                boolean sprinkles = (dSprinkles.getSelectedItem() == "Sprinkles");
+                store.addProduct(new Donut(name, price, cost, 
+                                           frosting, filling, sprinkles));
+            }
+            updateDisplay(Display.PRODUCTS);
+        } catch(Exception e) {
+            msg.setText("Failed to create new Donut: " + e);
+        }
+    }
+                            
+    protected void onCreateCustomerClick() {
+        // Server Name
+        JLabel lName = new JLabel("Name");
+        JTextField dName = new JTextField(20);
+
+        // Social Security Number
+        JLabel lPhone = new JLabel(
+            "<HTML><BR/>Phone  <SMALL>(Example: 123-456-7890)</SMALL></HTML>");
+        JTextField dPhone = new JTextField(20);
 
         Object[] objects = {
-            name , donutName , 
-            price , donutPrice,
-            cost , donutCost ,
-            fillingLabel , fillingOption , 
-            frostingLabel , frostingOption , 
-            sprinkleLabel , sprinkleOption
-
+            lName,  dName,
+            lPhone,   dPhone,
         };
 
-        int button = JOptionPane.showConfirmDialog(
-            this ,
-            objects , 
-            "New Donut" , 
-            JOptionPane.OK_CANCEL_OPTION , 
-            JOptionPane.QUESTION_MESSAGE);
+        final Pattern phoneFormat = Pattern.compile("^(\\d{3})-(\\d{3})-(\\d{4})$");
+ 
+        while(true) {
+            try {
+                int button = JOptionPane.showConfirmDialog(
+                    this,
+                    objects,
+                    "New Customer",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+                );
+            
+                if(button == JOptionPane.OK_OPTION) {
+                    String name = dName.getText();
+                    String phone = dPhone.getText();
+                    if(!phoneFormat.matcher(phone).find())
+                        throw new IllegalArgumentException("Invalid Phone: " + phone);
+                    store.addPerson(new Customer(name, phone));
+                    updateDisplay(Display.PEOPLE);
+                }
+                break;
+            } catch(Exception e) {
+                JOptionPane.showMessageDialog(this, "Invalid input: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    protected void onCreateServerClick() {
+        // Customer Name
+        JLabel lName = new JLabel("Name");
+        JTextField dName = new JTextField(20);
+
+        // Phone Number
+        JLabel lPhone = new JLabel(
+            "<HTML><BR/>Phone  <SMALL>(Example: 123-456-7890)</SMALL></HTML>");
+        JTextField dPhone = new JTextField(20);
+
+        // Social Security Number
+        JLabel lSSN = new JLabel(
+            "<HTML><BR/>SSN  <SMALL>(Example: 123-45-6789)</SMALL></HTML>");
+        JTextField dSSN = new JTextField(20);
+
+        Object[] objects = {
+            lName,  dName,
+            lPhone, dPhone,
+            lSSN,   dSSN,
+        };
+
+        final Pattern phoneFormat = Pattern.compile("^(\\d{3})-(\\d{3})-(\\d{4})$");
+        final Pattern ssnFormat   = Pattern.compile("^(\\d{3})-(\\d{2})-(\\d{4})$");
+ 
+        while(true) {
+            try {
+                int button = JOptionPane.showConfirmDialog(
+                    this,
+                    objects,
+                    "New Server",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+                );
+            
+                if(button == JOptionPane.OK_OPTION) {
+                    String name = dName.getText();
+                    String phone = dPhone.getText();
+                    if(!phoneFormat.matcher(phone).find())
+                        throw new IllegalArgumentException("Invalid Phone: " + phone);
+                    String ssn = dSSN.getText();
+                    if(!ssnFormat.matcher(ssn).find())
+                        throw new IllegalArgumentException("Invalid SSN: " + ssn);
+                    store.addPerson(new Server(name, phone, ssn));
+                    updateDisplay(Display.PEOPLE);
+                }
+                break;
+            } catch(Exception e) {
+                JOptionPane.showMessageDialog(this, "Invalid input: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    protected void EditDonutClick(Product p)
+    {
+         JLabel lName = new JLabel("Name");
+
+            JTextField dName = new JTextField(p.name());
+
+            // Price
+            JLabel lPrice = new JLabel("<HTML><BR/>Price</HTML>");
+            JSpinner dPrice = new JSpinner(new SpinnerNumberModel(1.95, 0.0, 99.99, 0.05));
+
+            // Cost
+            JLabel lCost = new JLabel("<HTML><BR/>Cost</HTML>");
+            JSpinner dCost = new JSpinner(new SpinnerNumberModel(0.55, 0.0, 99.99, 0.05));
+
+            // Frosting
+            JLabel lFrosting = new JLabel("<HTML><BR/>Frosting</HTML>");
+            JComboBox<Object> dFrosting = new JComboBox<>(Frosting.values());
+
+            // Filling
+            JLabel lFilling = new JLabel("<HTML><BR/>Filling</HTML>");
+            JComboBox<Object> dFilling = new JComboBox<>(Filling.values());
+
+            // Sprinkles
+            String[] options = {"No Sprinkles", "Sprinkles"};
+            JLabel lSprinkles = new JLabel("<HTML><BR/>Sprinkles</HTML>");
+            JComboBox<Object> dSprinkles = new JComboBox<>(options);
+
+            Object[] objects = {
+                lName,      dName,
+                lPrice,     dPrice,
+                lCost,      dCost,
+                lFrosting,  dFrosting,
+                lFilling,   dFilling,
+                lSprinkles, dSprinkles,
+            };
+            
+            int button = JOptionPane.showConfirmDialog(
+                this,
+                objects,
+                "New Donut",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if(button == JOptionPane.OK_OPTION) {
+                String name = dName.getText();
+                double price = (double) dPrice.getValue();
+                double cost = (double) dCost.getValue();
+                Frosting frosting = (Frosting) dFrosting.getSelectedItem();
+                Filling filling = (Filling) dFilling.getSelectedItem();
+                boolean sprinkles = (dSprinkles.getSelectedItem() == "Sprinkles");
+                store.addProduct(new Donut(name, price, cost, 
+                                           frosting, filling, sprinkles));
+            }
+            updateDisplay(Display.PRODUCTS);
+        
+
+    }
+
+    protected void onEditDonutClick(){
+        
+
+        //Show all the products and give them the option of editing
 
         
-        //send values to constructor
-        boolean sprinklesBool = false;
-        double donutPricedouble = Double.parseDouble(donutPrice.getText());
-        double donutCostdouble = Double.parseDouble(donutCost.getText());
-        if (( sprinkleOption.getSelectedItem()).equals("Sprinkles"))
-        {
-            sprinklesBool = true;
+
+        ArrayList<Product> product_options = store.getProductArray();
+
+
+        String[] product_options_string = new String[product_options.size()];
+
+        for (int i=0; i<product_options.size();i++){
+            product_options_string[i] = product_options.get(i).toString();
         }
 
-        //Create new donut
-        store.addProduct(new Donut(donutName.getText() , donutPricedouble ,
-        donutCostdouble , sprinklesBool , 
-         (Frosting) frostingOption.getSelectedItem() ,(Filling) fillingOption.getSelectedItem()));
-        updateDisplay();
-// 
+        //Show OptionDialog
+         int button = JOptionPane.showOptionDialog​(
+            this,
+            "Pick a product to edit", 
+            "Product", 
+            JOptionPane.DEFAULT_OPTION, 
+            JOptionPane.QUESTION_MESSAGE,
+            null, 
+            product_options_string, 
+            "abc");
+
+         System.out.println(button);
+         String abc  = product_options_string[button];
+
+         if(abc.charAt(0)=='J'){System.out.println("You selected java");}
+         if(abc.charAt(0)=='D'){EditDonutClick(product_options.get(button));}
+
+
+
+
+
+        
+
+
+
+
     }
 
-    protected void onCreateCustomerClick()
-    {
-        JLabel name = new JLabel("<HTML><br/>Name</HTML>");
-        JTextField customerName = new JTextField(20);
+    //Show button
 
-        JLabel number = new JLabel("<HTML><br/>Phone Number</HTML>");
-        JTextField phoneNumber = new JTextField(20);
 
-        Object[] objects = {
-            name , customerName , 
-            number , phoneNumber
 
-        };
 
-        int button = JOptionPane.showConfirmDialog(
-            this ,
-            objects , 
-            "New Customer" , 
-            JOptionPane.OK_CANCEL_OPTION , 
-            JOptionPane.QUESTION_MESSAGE );
 
-        // Send values to customer
+    protected void onEditJavaClick(){
+        return;
+
+    }
+
+
          
-        store.addCustomer(new Customer(customerName.getText() , phoneNumber.getText()));
-
-
-
-
-    }
-
     protected void onAboutClick() {                 // Display About dialog
         JDialog about = new JDialog();
-        about.getContentPane().setLayout(new BoxLayout(about.getContentPane(), BoxLayout.PAGE_AXIS));
+        about.getContentPane().setLayout(
+            new BoxLayout(about.getContentPane(), BoxLayout.PAGE_AXIS));
         about.setTitle("Java and Donut Express");
         about.setSize(640,600);
         
@@ -539,8 +820,12 @@ public class MainWin extends JFrame {
           + "<p><font size=-2>https://creativecommons.org/licenses/by-sa/3.0/us/</p>"
           + "<p>Donut Icon by Hazmat2 via Hyju, public domain</p>"
           + "<p><font size=-2>https://en.wikipedia.org/wiki/File:Simpsons_Donut.svg</p>"
+          + "<p>Server Icon by corpus delicti via the Noun Project</p>"
+          + "<p><font size=-2>https://thenounproject.com/term/waiter/937157</p>"
           + "<p>Help Icon by Vector Stall via the Flat Icon license</p>"
           + "<p><font size=-2>https://www.flaticon.com/premium-icon/question-mark_3444393</p>"
+          + "<p>File icons made by Freepik</p>"
+          + "<p><font size=-2>https://www.freepik.com</p>"          
           + "<br/>"
           + "</html>");
         artists.setAlignmentX(JLabel.CENTER_ALIGNMENT);
@@ -555,98 +840,36 @@ public class MainWin extends JFrame {
         about.setVisible(true);
      }
 
-    protected void onQuitClick() {dispose();} 
-
-     protected class CancelDialogException extends Exception {
-        public CancelDialogException() {
-            super("Dialog canceled");
-        }
-    }
-
-     private String getString(String prompt) throws CancelDialogException {
-        String newPrompt = prompt;
-        while(true) {
-            try {
-                newPrompt = JOptionPane.showInputDialog(this, newPrompt);
-                if(newPrompt == null || newPrompt.length() == 0) 
-                    throw new CancelDialogException();
-                break;
-            } catch (CancelDialogException e) {
-                throw e;  // Rethrow to signal Cancel was clicked
-            } catch (Exception e) {
-                newPrompt = "ERROR: Invalid string '" + newPrompt + "\n" + prompt;
-            }
-        }
-        return newPrompt;
-    }
-
-    private double getDouble(String prompt) throws CancelDialogException {
-        String newPrompt = prompt;
-        double result = 0.0;
-        while(true) {
-            try {
-                newPrompt = JOptionPane.showInputDialog(this, newPrompt);
-                if(newPrompt == null) throw new CancelDialogException();
-                result = Double.parseDouble(newPrompt);
-                break;
-            } catch (CancelDialogException e) {
-                throw e;  // Rethrow to signal Cancel was clicked
-            } catch (Exception e) {
-                newPrompt = "ERROR: Invalid double '" + newPrompt + "\n" + prompt;
-            }
-        }
-        return result;
-    }
-
-    private Object selectFromArray(String prompt, Object[] options) throws CancelDialogException {
-        JComboBox<Object> comboEnum = new JComboBox<>();
-        comboEnum.setModel(new DefaultComboBoxModel<Object>(options));
-        int button = JOptionPane.showConfirmDialog(this, comboEnum, prompt, 
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if(button == JOptionPane.CANCEL_OPTION) throw new CancelDialogException();
-        return comboEnum.getSelectedItem();
-    }
-
-      private void updateDisplay() {
-        data.setText("<html>" + store.toString()
-                                     .replaceAll("<","&lt;")
-                                     .replaceAll(">", "&gt;")
-                                     .replaceAll("\n", "<br/>")
-                              + "</html>");
-    }
-
-    private void updateDisplayCustomer()
-    {
-        data.setText( store.PersontoString());
-    }
-
-    private void updateDisplayServer()
-    {
-        data.setText(store.ServertoString());
-    }
-
     public static void main(String[] args) {
         MainWin myApp = new MainWin("JADE");
         myApp.setVisible(true);
-
     }
-
+    
+    // Utilities
+    private void updateDisplay(Display display) {
+        String s = "ERROR: Invalid display request: " + display;
+        if(display == Display.PRODUCTS) s = store.toString();
+        if(display == Display.PEOPLE)  s = store.peopleToString();
+        if(display == Display.ORDERS)  s = store.ordersToString();
+        data.setText("<html>" + s.replaceAll("<","&lt;")
+                                 .replaceAll(">", "&gt;")
+                                 .replaceAll("\n", "<br/>")
+                              + "</html>");
+    }
+    
     private Store store;
     private File filename;
-
     
     private JLabel data;                    // Display of output in main window
     private JLabel msg;                     // Status message display
-    private JButton bJava;                  // Button to select 1 stick
-    private JButton bDonut; 
-    private JButton bCustomer;
-    private JButton bServer;
-    private JButton bViewProduct;
-    private JButton bViewCustomer;
-    private JButton bViewServer;
-
-
-
-} 
-
-
+    private JButton bOrder;                 // Button to place an order
+    private JButton bJava;                  // Button to create a new Java product
+    private JButton bDonut;                 // Button to create a new Donut product
+    private JButton bCustomer;              // Button to create a new Customer
+    private JButton bServer;                // Button to create a new Server
+    private JButton bListOrders;            // Button to list orders
+    private JButton bListProducts;          // Button to list products
+    private JButton bListPeople;     
+    private JButton bEditJava;
+    private JButton bEditDonut;       // Button to list people
+}

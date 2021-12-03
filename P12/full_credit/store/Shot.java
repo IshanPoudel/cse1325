@@ -1,5 +1,12 @@
 package store;
 
-public enum Shot{
-		none , milk , sugar , creamer ,  chocolate , vanilla , peppermint , hazlenut, None
-	}
+public enum Shot {
+    None,
+    Milk,
+    Sugar,
+    Creamer,
+    Chocolate,
+    Vanilla,
+    Hazelnut,
+    Peppermint,
+}

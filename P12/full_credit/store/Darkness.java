@@ -1,5 +1,9 @@
 package store;
 
-public enum Darkness{
-		blond,light,medium,dark,extreme
-	}
+public enum Darkness {
+    Blond,
+    Light,
+    Medium,
+    Dark,
+    Extreme,
+}
