@@ -12,6 +12,7 @@ public class Product {
     }
     public String name() {return name;}
     public double price() {return price;}
+    public double cost() {return cost;}
     public Product(BufferedReader in) throws IOException {
         this.name  = in.readLine();
         this.cost  = Double.parseDouble(in.readLine());

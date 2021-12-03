@@ -201,18 +201,14 @@ public class MainWin extends JFrame {
         toolbar.add(Box.createHorizontalStrut(25));
 
 
-        bEditJava = new JButton("Edit Java");
-        bEditJava.setActionCommand("Edit Java Product");
-        bEditJava.setToolTipText("Create a New Java Product");
-        toolbar.add(bEditJava);
-        bEditJava.addActionListener(event -> onEditJavaClick());
+        bEditProduct = new JButton(new ImageIcon("gui/resources/product_edit.png"));
+        bEditProduct.setActionCommand("Edit Java Product");
+        bEditProduct.setToolTipText("Create a New Java Product");
+        toolbar.add(bEditProduct);
+        bEditProduct.addActionListener(event -> onEditProductClick());
 
 
-        bEditDonut = new JButton("Edit Donut");
-        bEditDonut.setActionCommand("Edit Donut Product");
-        bEditDonut.setToolTipText("Edit  a New Donut Product");
-        toolbar.add(bEditDonut);
-        bEditJava.addActionListener(event -> onEditDonutClick());
+        
         
         bListOrders = new JButton(new ImageIcon("gui/resources/list_orders.png"));
           bListOrders.setActionCommand("List all orders");
@@ -674,15 +670,16 @@ public class MainWin extends JFrame {
 
             // Price
             JLabel lPrice = new JLabel("<HTML><BR/>Price</HTML>");
-            JSpinner dPrice = new JSpinner(new SpinnerNumberModel(1.95, 0.0, 99.99, 0.05));
+            JSpinner dPrice = new JSpinner(new SpinnerNumberModel(p.price(), 0.0, 99.99, 0.05));
 
             // Cost
             JLabel lCost = new JLabel("<HTML><BR/>Cost</HTML>");
-            JSpinner dCost = new JSpinner(new SpinnerNumberModel(0.55, 0.0, 99.99, 0.05));
+            JSpinner dCost = new JSpinner(new SpinnerNumberModel(p.cost(), 0.0, 99.99, 0.05));
 
             // Frosting
             JLabel lFrosting = new JLabel("<HTML><BR/>Frosting</HTML>");
             JComboBox<Object> dFrosting = new JComboBox<>(Frosting.values());
+
 
             // Filling
             JLabel lFilling = new JLabel("<HTML><BR/>Filling</HTML>");
@@ -727,7 +724,90 @@ public class MainWin extends JFrame {
 
     }
 
-    protected void onEditDonutClick(){
+    protected void EditJava(Product p , int indexOnProductArray)
+    {
+        try {
+            // Name of Java
+            JLabel lName = new JLabel("Name");
+            JTextField dName = new JTextField(p.name());
+
+            // Price
+            JLabel lPrice = new JLabel("<HTML><BR/>Price</HTML>");
+            JSpinner dPrice = new JSpinner(new SpinnerNumberModel(p.price(), 0.0, 99.99, 0.05));
+
+            // Cost
+            JLabel lCost = new JLabel("<HTML><BR/>Cost</HTML>");
+            JSpinner dCost = new JSpinner(new SpinnerNumberModel(p.cost(), 0.0, 99.99, 0.05));
+
+            // Darkness
+            JLabel lDarkness = new JLabel("<HTML><BR/>Darkness</HTML>");
+            JComboBox<Object> dDarkness = new JComboBox<>(Darkness.values());
+            
+            // Provide spacing to the Shots area
+            JLabel sShots = new JLabel("<HTML><BR/></HTML>");
+            
+            // Shots
+            JPanel shotPanel = new JPanel();
+            shotPanel.setLayout(new BoxLayout(shotPanel, BoxLayout.PAGE_AXIS));
+            
+            // This provides a scroll bar when a lot of shots are added
+            JScrollPane scrollingShotPanel = new JScrollPane(shotPanel);
+            scrollingShotPanel.setPreferredSize(new Dimension(200,120));
+            
+            // Prepopulate with 3 shot comboboxes
+            shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            
+            // This button adds another combobox each time it's pressed
+            JButton addShot = new JButton("Add a Shot");
+            addShot.addActionListener(event -> {
+                shotPanel.add(new JComboBox<Shot>(Shot.values()));
+            });
+            
+            // Add components to a dialog
+
+            Object[] objects = {
+                lName,     dName,
+                lPrice,    dPrice,
+                lCost,     dCost,
+                lDarkness, dDarkness,
+                sShots,    
+                addShot,    scrollingShotPanel,
+            };
+            
+            int button = JOptionPane.showConfirmDialog(
+                this,
+                objects,
+                "New Java",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if(button != JOptionPane.OK_OPTION) return;
+
+            String name = dName.getText();
+            double price = (double) dPrice.getValue();
+            double cost = (double) dCost.getValue();
+            Darkness darkness = (Darkness) dDarkness.getSelectedItem();
+            Java java = new Java(name, price, cost, darkness);
+            
+            for(Object o : shotPanel.getComponents()) {
+                if(!(o instanceof JComboBox)) continue; // verify cast will work, then
+                @SuppressWarnings("unchecked")          // skip unchecked cast warning
+                    JComboBox<Object> cb = (JComboBox<Object>) o;
+                Shot shot = (Shot) cb.getSelectedItem();
+                if(shot != Shot.None) java.addShot(shot);
+            }
+            store.addProduct(java);
+            updateDisplay(Display.PRODUCTS);
+        } catch(Exception e) {
+            msg.setText("Failed to create new Java: " + e.getMessage());
+        }
+
+    }
+
+    protected void onEditProductClick(){
         
 
         //Show all the products and give them the option of editing
@@ -757,7 +837,7 @@ public class MainWin extends JFrame {
          System.out.println(button);
          String abc  = product_options_string[button];
 
-         if(abc.charAt(0)=='J'){System.out.println("You selected java");}
+         if(abc.charAt(0)=='J'){EditJava(product_options.get(button) , button);;}
          if(abc.charAt(0)=='D'){EditDonut(product_options.get(button) , button);}
 
 
@@ -872,6 +952,6 @@ public class MainWin extends JFrame {
     private JButton bListOrders;            // Button to list orders
     private JButton bListProducts;          // Button to list products
     private JButton bListPeople;     
-    private JButton bEditJava;
-    private JButton bEditDonut;       // Button to list people
+    
+    private JButton bEditProduct;       // Button to list people
 }
