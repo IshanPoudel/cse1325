@@ -666,7 +666,7 @@ public class MainWin extends JFrame {
         }
     }
 
-    protected void EditDonutClick(Product p)
+    protected void EditDonut(Product p , int indexOnProductArray)
     {
          JLabel lName = new JLabel("Name");
 
@@ -717,8 +717,10 @@ public class MainWin extends JFrame {
                 Frosting frosting = (Frosting) dFrosting.getSelectedItem();
                 Filling filling = (Filling) dFilling.getSelectedItem();
                 boolean sprinkles = (dSprinkles.getSelectedItem() == "Sprinkles");
-                store.addProduct(new Donut(name, price, cost, 
-                                           frosting, filling, sprinkles));
+
+                //Find a way to update the product
+                store.replaceProduct(new Donut(name, price, cost, 
+                                           frosting, filling, sprinkles) , indexOnProductArray);
             }
             updateDisplay(Display.PRODUCTS);
         
@@ -756,7 +758,7 @@ public class MainWin extends JFrame {
          String abc  = product_options_string[button];
 
          if(abc.charAt(0)=='J'){System.out.println("You selected java");}
-         if(abc.charAt(0)=='D'){EditDonutClick(product_options.get(button));}
+         if(abc.charAt(0)=='D'){EditDonut(product_options.get(button) , button);}
 
 
 

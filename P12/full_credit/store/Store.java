@@ -91,6 +91,11 @@ public class Store {
         return people.toArray();
     }
 
+    public void replaceProduct(Product p , int index)
+    {
+        this.products.set(index , p);
+    }
+
     @Override
     public String toString() {
         String result = "Welcome to " + storeName + "\n\nToday's Menu\n\n";
