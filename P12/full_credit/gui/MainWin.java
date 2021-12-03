@@ -97,8 +97,12 @@ public class MainWin extends JFrame {
         JMenuItem mOrders   = new JMenuItem("Orders");
         JMenuItem mProducts = new JMenuItem("Products");
         JMenuItem mPeople   = new JMenuItem("People");
+        JMenu     mReport   = new JMenu("Report");
+        JMenuItem mPANDL    = new JMenuItem("Profit and Loss");
+        JMenuItem mServerRep= new JMenuItem("Server Report");
         JMenu     mHelp     = new JMenu("Help");
         JMenuItem mAbout    = new JMenuItem("About");
+
         
         mNew     .addActionListener(event -> onNewClick());
         mOpen    .addActionListener(event -> onOpenClick());
@@ -114,6 +118,8 @@ public class MainWin extends JFrame {
         mPeople  .addActionListener(event -> updateDisplay(Display.PEOPLE));
         mOrders  .addActionListener(event -> updateDisplay(Display.ORDERS));
         mAbout   .addActionListener(event -> onAboutClick());
+        mServerRep.addActionListener(event -> ServerReport());
+        mPANDL   .addActionListener(event -> Profit());
 
         
         mFile  .add(mNew);
@@ -128,11 +134,14 @@ public class MainWin extends JFrame {
         mView  .add(mProducts);
         mView  .add(mPeople);
         mHelp  .add(mAbout);
+        mReport.add(mServerRep);
+        mReport.add(mPANDL);
         
         menubar.add(mFile);
         menubar.add(mCreate);
         menubar.add(mView);
         menubar.add(mHelp);
+        menubar.add(mReport);
         
         setJMenuBar(menubar);
         
