@@ -997,7 +997,10 @@ public class MainWin extends JFrame {
         about.add(copyright);
                     
        JLabel artists = new JLabel("<html>"
+       	  + "<p>Code borrowed from Professor George Rice , UTA"
+
           + "<p>JADE Logo by SaxDeux, licensed under CC BY-SA 3.0</p>"
+
           + "<p><font size=-2>https://commons.wikimedia.org/wiki/File:Logo_JADE.png</p>"
           + "<p>Flat Coffee Cup Icon by superawesomevectors, licensed under CC BY-SA 3.0</p>"
           + "<p><font size=-2>http://fav.me/dbf6otc</p>"
